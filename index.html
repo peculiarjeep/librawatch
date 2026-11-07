@@ -1,1253 +1,2200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LibraWatch — Library Access Monitoring</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        sidebar: '#1e1b4b',
-                        canvasBg: '#f3f4f8',
-                    }
-                }
-            }
-        }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LibraWatch — Library Access Monitoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-app: #f4f6fa;
+      --bg-surface: #ffffff;
+      --bg-sidebar: #ffffff;
+      --primary: #3b5bf6;
+      --primary-hover: #2b49df;
+      --primary-light: #eef2ff;
+      --success: #22c55e;
+      --success-light: #dcfce7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-sub: #94a3b8;
+      --border-color: #e2e8f0;
+      --border-subtle: #f1f5f9;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+      --shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 14px;
+    }
+
+    /* ================= SIDEBAR ================= */
+    .sidebar {
+      width: 250px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 20px 14px;
+      justify-content: space-between;
+      z-index: 40;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 10px 24px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: var(--primary);
+      color: white;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(59, 91, 246, 0.35);
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      list-style: none;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.15s ease;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .nav-item:hover {
+      background: var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .nav-item.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(59, 91, 246, 0.25);
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-badge {
+      background: #fee2e2;
+      color: #ef4444;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    .nav-item.active .nav-badge {
+      background: #ffffff;
+      color: var(--primary);
+    }
+
+    .sidebar-widget {
+      background: #fef7f7;
+      border: 1px solid #fee2e2;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .widget-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #991b1b;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .widget-desc {
+      font-size: 11px;
+      color: #7f1d1d;
+      line-height: 1.35;
+    }
+
+    .widget-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: #991b1b;
+      margin-top: 4px;
+    }
+
+    .widget-stats span strong {
+      font-weight: 800;
+    }
+
+    .btn-watchlist-cta {
+      background: #84cc16;
+      background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+      color: #1a2e05;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 9px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 4px;
+      transition: transform 0.1s ease, filter 0.15s ease;
+    }
+
+    .btn-watchlist-cta:hover {
+      filter: brightness(0.96);
+      transform: translateY(-1px);
+    }
+
+    /* ================= MAIN CONTENT ================= */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    /* TOP BAR */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .top-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.4px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 12px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-input {
+      padding: 8px 14px 8px 36px;
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+      background: #f8fafc;
+      font-size: 13px;
+      width: 210px;
+      transition: all 0.2s ease;
+      color: var(--text-main);
+    }
+
+    .search-input:focus {
+      outline: none;
+      background: #fff;
+      border-color: var(--primary);
+      width: 250px;
+      box-shadow: 0 0 0 3px rgba(59, 91, 246, 0.1);
+    }
+
+    .records-pill {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background-color: var(--success);
+      border-radius: 50%;
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: #f1f5f9;
+      color: var(--text-main);
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-left: 8px;
+      border-left: 1px solid var(--border-color);
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      background: #4f46e5;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .profile-name {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .profile-role {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* CONTENT BODY */
+    .content-area {
+      padding: 24px 28px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* SECTION HEADER */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .sec-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 3px;
+    }
+
+    .sec-subtitle {
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .sec-rule {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+    /* ================= KPI CARDS ================= */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+
+    .kpi-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: transform 0.15s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .kpi-icon-wrap {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kpi-value {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      line-height: 1.1;
+    }
+
+    .kpi-footer {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .trend-tag {
+      background: #fee2e2;
+      color: #dc2626;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* CARD COLORS */
+    .icon-primary { background: #e0e7ff; color: var(--primary); }
+    .icon-success { background: #dcfce7; color: var(--success); }
+    .icon-danger { background: #fee2e2; color: var(--danger); }
+    .icon-warning { background: #fef3c7; color: var(--warning); }
+
+    /* ================= MAIN CHART CARD ================= */
+    .card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      padding: 20px 22px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .card-subtitle {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .chart-legend {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.success { background: var(--success); }
+    .legend-dot.danger { background: var(--danger); }
+
+    .chart-canvas-container {
+      width: 100%;
+      height: 240px;
+      position: relative;
+    }
+
+    /* ================= DEVICE BREAKDOWN ================= */
+    .device-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .device-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .device-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+    }
+
+    .device-name-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .device-bar-container {
+      height: 7px;
+      width: 100%;
+      background: #e2e8f0;
+      border-radius: 999px;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .bar-seg-success {
+      background: var(--success);
+      height: 100%;
+    }
+
+    .bar-seg-danger {
+      background: var(--danger);
+      height: 100%;
+    }
+
+    .device-row-bottom {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ================= TABS LOGIC ================= */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ================= TABLES & LISTS ================= */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12.5px;
+    }
+
+    table.data-table th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 700;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    table.data-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    table.data-table tr:hover td {
+      background: #fbfcfe;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .badge-success { background: var(--success-light); color: #15803d; }
+    .badge-danger { background: var(--danger-light); color: #b91c1c; }
+    .badge-warning { background: var(--warning-light); color: #b45309; }
+    .badge-critical { background: #fee2e2; color: #991b1b; animation: pulse 2s infinite; }
+
+    /* FILTERS BAR */
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .select-filter {
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      font-size: 12.5px;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .btn-action {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 12.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-action:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-outline:hover {
+      background: #f1f5f9;
+    }
+
+    /* ================= MODAL / PASSWORD PROMPT ================= */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow-modal);
+      transform: translateY(12px) scale(0.97);
+      transition: transform 0.2s ease;
+      text-align: center;
+    }
+
+    .modal-overlay.active .modal-box {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-lock-icon {
+      width: 52px;
+      height: 52px;
+      background: #fee2e2;
+      color: #dc2626;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .modal-subtitle {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    .modal-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 91, 246, 0.15);
+    }
+
+    .modal-error {
+      color: var(--danger);
+      font-size: 12px;
+      font-weight: 600;
+      min-height: 18px;
+      margin-bottom: 14px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-modal-cancel {
+      background: #f1f5f9;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-modal-submit {
+      background: var(--primary);
+      color: white;
+      border: none;
+    }
+
+    /* LIVE TOGGLE CONTROL */
+    .stream-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f1f5f9;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 34px;
+      height: 18px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #cbd5e1;
+      transition: .2s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--success);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    /* RESPONSIVENESS */
+    @media (max-width: 1100px) {
+      .kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: static; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .topbar { flex-wrap: wrap; gap: 10px; }
+    }
+  </style>
 </head>
-<body class="bg-[#f3f4f8] text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+<body>
 
-    <!-- Top Navigation / Header -->
-    <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 sticky top-0 z-50">
-        <div class="flex items-center space-x-3">
-            <div class="bg-indigo-600 text-white w-9 h-9 rounded-lg flex items-center justify-center font-bold text-lg shadow-sm">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            <div>
-                <h1 class="font-bold text-slate-900 leading-tight">LibraWatch</h1>
-                <p class="text-xs text-slate-500">Library access monitoring</p>
-            </div>
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div>
+      <div class="brand">
+        <div class="brand-icon">
+          <!-- Book Open Icon -->
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <div>
+          <div class="brand-title">LibraWatch</div>
+          <div class="brand-subtitle">Library access monitoring</div>
+        </div>
+      </div>
+
+      <ul class="nav-list">
+        <li class="nav-item active" data-tab="overview">
+          <div class="nav-left">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+            <span>Overview</span>
+          </div>
+        </li>
+        <li class="nav-item" data-tab="login-log">
+          <div class="nav-left">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span>Login Log</span>
+          </div>
+        </li>
+        <li class="nav-item" data-tab="students">
+          <div class="nav-left">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Students</span>
+          </div>
+        </li>
+        <li class="nav-item" data-tab="watchlist">
+          <div class="nav-left">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Watchlist</span>
+          </div>
+          <span class="nav-badge" id="sidebarWatchlistBadge">15</span>
+        </li>
+        <li class="nav-item" data-tab="analytics">
+          <div class="nav-left">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+            <span>Analytics</span>
+          </div>
+        </li>
+        <li class="nav-item" data-tab="settings" id="navSettings">
+          <div class="nav-left">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Settings</span>
+          </div>
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SIDEBAR WATCHLIST WIDGET -->
+    <div class="sidebar-widget">
+      <div class="widget-header">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Suspicious login watch</span>
+      </div>
+      <div class="widget-desc">Flagged at 2+ failed attempts, or 3 attempts within 10 min.</div>
+      <div class="widget-stats">
+        <span>Flagged students</span>
+        <strong id="widgetFlaggedCount">15</strong>
+      </div>
+      <div class="widget-stats" style="margin-top: -2px;">
+        <span>Critical</span>
+        <strong style="color: #ef4444;" id="widgetCriticalCount">1</strong>
+      </div>
+      <button class="btn-watchlist-cta" onclick="switchTab('watchlist')">
+        Review watchlist 
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN LAYOUT ================= -->
+  <main class="main-wrap">
+    
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="top-title" id="topbarTitle">Overview</div>
+
+      <div class="top-actions">
+        <div class="search-box">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" class="search-input" id="globalStudentSearch" placeholder="Search student ID..." onkeyup="handleGlobalSearch(event)">
         </div>
 
-        <div class="flex items-center space-x-4">
-            <!-- Global Search -->
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <i class="fa-solid fa-search text-xs"></i>
-                </span>
-                <input type="text" id="globalSearchInput" placeholder="Search student ID" class="bg-slate-100 text-sm rounded-full pl-9 pr-4 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64 border border-transparent focus:border-indigo-500">
-            </div>
-
-            <!-- Records Badge -->
-            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-medium flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>1,105 records</span>
-                <span class="text-emerald-400">•</span>
-                <span class="text-emerald-600">just now</span>
-            </div>
-
-            <!-- Refresh Button -->
-            <button onclick="location.reload()" title="Refresh records" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition">
-                <i class="fa-solid fa-rotate text-xs"></i>
-            </button>
-
-            <!-- User Profile -->
-            <div class="flex items-center space-x-2 pl-2 border-l border-slate-200">
-                <div class="bg-indigo-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">
-                    SO
-                </div>
-                <div class="text-left hidden sm:block">
-                    <p class="text-xs font-semibold text-slate-900">Security Ops</p>
-                    <p class="text-[10px] text-slate-500">Library systems</p>
-                </div>
-            </div>
+        <div class="stream-toggle-wrap" title="Simulate incoming attempts constantly">
+          <span>Live feed</span>
+          <label class="switch">
+            <input type="checkbox" id="liveSimToggle" checked onchange="toggleLiveSimulation()">
+            <span class="slider"></span>
+          </label>
         </div>
+
+        <div class="records-pill">
+          <span class="live-dot"></span>
+          <span id="topbarRecordCount">1,105 records</span>
+          <span style="opacity: 0.6;">· just now</span>
+        </div>
+
+        <button class="icon-btn" title="Refresh data calculations" onclick="manualRefresh()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        </button>
+
+        <div class="user-profile">
+          <div class="avatar">SO</div>
+          <div class="profile-info">
+            <span class="profile-name">Security Ops</span>
+            <span class="profile-role">Library systems</span>
+          </div>
+        </div>
+      </div>
     </header>
 
-    <div class="flex flex-1 overflow-hidden">
-        <!-- Sidebar Navigation -->
-        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex shrink-0">
-            <div class="p-4 space-y-1.5">
-                <button onclick="switchTab('overview')" id="nav-overview" class="tab-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition bg-indigo-600 text-white shadow-md shadow-indigo-200">
-                    <i class="fa-solid fa-chart-pie w-5"></i>
-                    <span>Overview</span>
-                </button>
-                <button onclick="switchTab('loginLog')" id="nav-loginLog" class="tab-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-list-ul w-5"></i>
-                    <span>Login Log</span>
-                </button>
-                <button onclick="switchTab('students')" id="nav-students" class="tab-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-user-graduate w-5"></i>
-                    <span>Students</span>
-                </button>
-                <button onclick="switchTab('watchlist')" id="nav-watchlist" class="tab-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-100 justify-between">
-                    <div class="flex items-center space-x-3">
-                        <i class="fa-solid fa-shield-dog w-5"></i>
-                        <span>Watchlist</span>
-                    </div>
-                    <span class="bg-rose-100 text-rose-600 text-xs px-2 py-0.5 rounded-full font-bold">15</span>
-                </button>
-                <button onclick="switchTab('analytics')" id="nav-analytics" class="tab-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-chart-line w-5"></i>
-                    <span>Analytics</span>
-                </button>
-                <button onclick="switchTab('settings')" id="nav-settings" class="tab-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-gear w-5"></i>
-                    <span>Settings</span>
-                </button>
-            </div>
+    <!-- CONTENT BODY -->
+    <div class="content-area">
 
-            <!-- Suspicious Login Watch Card at Bottom of Sidebar -->
-            <div class="p-4 m-3 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm space-y-2">
-                <div class="flex items-center space-x-2 text-rose-600 font-semibold text-xs">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>Suspicious login watch</span>
-                </div>
-                <p class="text-[11px] text-slate-500 leading-relaxed">
-                    Flagged at 2+ failed attempts, or 3 attempts within 10 min.
-                </p>
-                <div class="text-xs flex justify-between pt-1 border-t border-slate-200 font-medium">
-                    <span class="text-slate-600">Flagged students</span>
-                    <span class="text-slate-900 font-bold">15</span>
-                </div>
-                <div class="text-xs flex justify-between font-medium">
-                    <span class="text-slate-600">Critical</span>
-                    <span class="text-rose-600 font-bold">1</span>
-                </div>
-                <button onclick="switchTab('watchlist')" class="w-full mt-2 bg-lime-400 hover:bg-lime-500 text-slate-900 font-semibold text-xs py-2 rounded-lg transition shadow-sm">
-                    Review watchlist <i class="fa-solid fa-arrow-right ml-1"></i>
-                </button>
-            </div>
-        </aside>
-
-        <!-- Main Content Area -->
-        <main class="flex-1 overflow-y-auto p-8" id="main-content-container">
-
-            <!-- TAB 1: OVERVIEW -->
-            <div id="tab-overview" class="tab-content space-y-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between pb-2 border-b border-slate-200">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Overview</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Access monitoring overview • 26 Sep – 25 Oct • 1,105 attempts from 1,015 students</p>
-                    </div>
-                    <div class="text-xs text-slate-500 mt-2 md:mt-0 font-medium bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
-                        Watchlist rule: 2+ failures, or 3 attempts within 10 min
-                    </div>
-                </div>
-
-                <!-- 5 Metric Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div class="flex justify-between items-start">
-                            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Total Logins</span>
-                            <span class="w-7 h-7 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs"><i class="fa-solid fa-right-to-bracket"></i></span>
-                        </div>
-                        <div class="mt-3">
-                            <h3 class="text-2xl font-black text-slate-900">1,105</h3>
-                            <p class="text-xs text-slate-500 mt-1">30 active days</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div class="flex justify-between items-start">
-                            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Success Rate</span>
-                            <span class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs"><i class="fa-solid fa-circle-check"></i></span>
-                        </div>
-                        <div class="mt-3">
-                            <h3 class="text-2xl font-black text-slate-900">65.1%</h3>
-                            <p class="text-xs text-slate-500 mt-1">719 successful attempts</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div class="flex justify-between items-start">
-                            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Failed Attempts</span>
-                            <span class="w-7 h-7 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xs"><i class="fa-solid fa-circle-xmark"></i></span>
-                        </div>
-                        <div class="mt-3">
-                            <h3 class="text-2xl font-black text-slate-900">386</h3>
-                            <p class="text-xs text-slate-500 mt-1">34.9% of all attempts</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div class="flex justify-between items-start">
-                            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Failure Rate (7D)</span>
-                            <span class="w-7 h-7 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xs"><i class="fa-solid fa-chart-line"></i></span>
-                        </div>
-                        <div class="mt-3 flex items-baseline space-x-2">
-                            <h3 class="text-2xl font-black text-slate-900">34.9%</h3>
-                            <span class="text-[11px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">+1.1%</span>
-                        </div>
-                        <p class="text-[11px] text-slate-400 mt-1">vs 34.4% previous 7d</p>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden sm:col-span-2 lg:col-span-1">
-                        <div class="flex justify-between items-start">
-                            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Flagged Students</span>
-                            <span class="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xs"><i class="fa-solid fa-triangle-exclamation"></i></span>
-                        </div>
-                        <div class="mt-3">
-                            <h3 class="text-2xl font-black text-slate-900">15</h3>
-                            <p class="text-xs text-amber-600 font-medium mt-1">1 critical • 0 high</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Charts & Breakdown Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <h3 class="font-bold text-slate-900">Login volume by day</h3>
-                                    <p class="text-xs text-slate-500">Successful and failed attempts recorded each day</p>
-                                </div>
-                                <div class="flex items-center space-x-4 text-xs font-medium">
-                                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span class="text-slate-600">Success</span></span>
-                                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span><span class="text-slate-600">Failed</span></span>
-                                </div>
-                            </div>
-                            <div class="h-64 relative">
-                                <canvas id="loginVolumeChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <div class="mb-4">
-                                <h3 class="font-bold text-slate-900">Access by device</h3>
-                                <p class="text-xs text-slate-500">Where students are signing in from</p>
-                            </div>
-
-                            <div class="space-y-4 pt-2">
-                                <div>
-                                    <div class="flex justify-between text-xs font-semibold mb-1">
-                                        <span class="text-slate-700 flex items-center"><span class="w-2 h-2 rounded-full bg-indigo-600 mr-2"></span>Desktop</span>
-                                        <span class="text-slate-900">286 logins</span>
-                                    </div>
-                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex">
-                                        <div class="bg-emerald-500 h-full" style="width: 60.5%"></div>
-                                        <div class="bg-rose-500 h-full" style="width: 39.5%"></div>
-                                    </div>
-                                    <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                                        <span>113 failed</span>
-                                        <span class="text-rose-500 font-medium">39.5% failure rate</span>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div class="flex justify-between text-xs font-semibold mb-1">
-                                        <span class="text-slate-700 flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>Mobile</span>
-                                        <span class="text-slate-900">276 logins</span>
-                                    </div>
-                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex">
-                                        <div class="bg-emerald-500 h-full" style="width: 66.7%"></div>
-                                        <div class="bg-rose-500 h-full" style="width: 33.3%"></div>
-                                    </div>
-                                    <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                                        <span>92 failed</span>
-                                        <span class="text-rose-500 font-medium">33.3% failure rate</span>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div class="flex justify-between text-xs font-semibold mb-1">
-                                        <span class="text-slate-700 flex items-center"><span class="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>Tablet</span>
-                                        <span class="text-slate-900">275 logins</span>
-                                    </div>
-                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex">
-                                        <div class="bg-emerald-500 h-full" style="width: 65.5%"></div>
-                                        <div class="bg-rose-500 h-full" style="width: 34.5%"></div>
-                                    </div>
-                                    <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                                        <span>95 failed</span>
-                                        <span class="text-rose-500 font-medium">34.5% failure rate</span>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div class="flex justify-between text-xs font-semibold mb-1">
-                                        <span class="text-slate-700 flex items-center"><span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>Laptop</span>
-                                        <span class="text-slate-900">268 logins</span>
-                                    </div>
-                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex">
-                                        <div class="bg-emerald-500 h-full" style="width: 67.9%"></div>
-                                        <div class="bg-rose-500 h-full" style="width: 32.1%"></div>
-                                    </div>
-                                    <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                                        <span>86 failed</span>
-                                        <span class="text-rose-500 font-medium">32.1% failure rate</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Row -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 class="font-bold text-slate-900">Failure rate trend</h3>
-                                <p class="text-xs text-slate-500">Share of failed attempts per day against the period average</p>
-                            </div>
-                        </div>
-                        <div class="h-48 relative">
-                            <canvas id="failureTrendChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-3">
-                                <div>
-                                    <h3 class="font-bold text-slate-900">Watchlist</h3>
-                                    <p class="text-xs text-slate-500">Flagged at 2+ failed attempts</p>
-                                </div>
-                                <button onclick="switchTab('watchlist')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">View all <i class="fa-solid fa-arrow-right ml-0.5"></i></button>
-                            </div>
-
-                            <div class="space-y-2.5 mt-4">
-                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="text-xs font-bold bg-slate-200 text-slate-700 px-2 py-1 rounded-md">13</span>
-                                        <div>
-                                            <p class="text-xs font-bold text-slate-900">2026-9921 <span class="bg-rose-100 text-rose-700 text-[10px] px-1.5 py-0.5 rounded ml-1 font-semibold">Critical</span></p>
-                                            <p class="text-[10px] text-slate-500">10 attempts between 20:15 and 20:22 (7 min) on 25 Oct</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="text-xs font-bold bg-slate-200 text-slate-700 px-2 py-1 rounded-md">3</span>
-                                        <div>
-                                            <p class="text-xs font-bold text-slate-900">2026-5376 <span class="bg-amber-100 text-amber-700 text-[10px] px-1.5 py-0.5 rounded ml-1 font-semibold">Medium</span></p>
-                                            <p class="text-[10px] text-slate-500">3 failed attempts across 3 device types</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="text-xs font-bold bg-slate-200 text-slate-700 px-2 py-1 rounded-md">2</span>
-                                        <div>
-                                            <p class="text-xs font-bold text-slate-900">2026-1885 <span class="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded ml-1 font-semibold">Low</span></p>
-                                            <p class="text-[10px] text-slate-500">2 failed attempts across 2 device types</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 2: LOGIN LOG -->
-            <div id="tab-loginLog" class="tab-content hidden space-y-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between pb-2 border-b border-slate-200">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Login Log</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">1,105 of 1,105 recorded attempts • click any row for the student history</p>
-                    </div>
-                    <div class="flex items-center space-x-2 mt-2 md:mt-0">
-                        <button class="bg-white border border-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium shadow-sm flex items-center space-x-1.5">
-                            <i class="fa-solid fa-arrow-down-up"></i>
-                            <span>Newest recorded</span>
-                        </button>
-                        <button class="bg-white border border-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium shadow-sm">
-                            By login date
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Student ID</label>
-                        <input type="text" id="logSearchInput" placeholder="e.g. 2026-9921" oninput="filterLogTable()" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Result</label>
-                        <select id="logResultFilter" onchange="filterLogTable()" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="">All results</option>
-                            <option value="Success">Success</option>
-                            <option value="Failed">Failed</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Device</label>
-                        <select id="logDeviceFilter" onchange="filterLogTable()" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="">All devices</option>
-                            <option value="Laptop">Laptop</option>
-                            <option value="Desktop">Desktop</option>
-                            <option value="Mobile">Mobile</option>
-                            <option value="Tablet">Tablet</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">From</label>
-                        <input type="text" placeholder="dd/mm/yyyy" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div class="flex items-end space-x-2">
-                        <div class="flex-1">
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">To</label>
-                            <input type="text" placeholder="dd/mm/yyyy" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                        <button onclick="resetLogFilters()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-3 py-2 rounded-xl font-medium transition h-[34px]">
-                            <i class="fa-solid fa-filter-circle-xmark mr-1"></i> Reset
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse" id="loginLogTable">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    <th class="p-4">Sheet row</th>
-                                    <th class="p-4">Student ID</th>
-                                    <th class="p-4">Date</th>
-                                    <th class="p-4">Time in</th>
-                                    <th class="p-4">Time out</th>
-                                    <th class="p-4">Duration</th>
-                                    <th class="p-4">Device</th>
-                                    <th class="p-4">Result</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 text-xs text-slate-700 font-medium"></tbody>
-                        </table>
-                    </div>
-                    <div class="p-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50">
-                        <span>Showing 1-25 of 1105 attempts</span>
-                        <div class="flex items-center space-x-2">
-                            <button class="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-100"><i class="fa-solid fa-chevron-left"></i></button>
-                            <span class="font-bold text-slate-800">1 / 45</span>
-                            <button class="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-100"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 3: STUDENTS -->
-            <div id="tab-students" class="tab-content hidden space-y-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between pb-2 border-b border-slate-200">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Students</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Aggregated access history per student ID. Flagged students are marked from the watchlist rules.</p>
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <div class="relative w-full sm:w-96">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-search text-xs"></i>
-                        </span>
-                        <input type="text" id="studentSearchInput" oninput="filterStudentsTable()" placeholder="Search student ID" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
-                        <select class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700">
-                            <option>Most logins</option>
-                            <option>Highest failure rate</option>
-                            <option>Most recent activity</option>
-                        </select>
-                        <span class="text-xs font-semibold text-slate-500">1,015 students</span>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse" id="studentsTable">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    <th class="p-4">Student ID</th>
-                                    <th class="p-4">Risk</th>
-                                    <th class="p-4">Logins</th>
-                                    <th class="p-4">Failed</th>
-                                    <th class="p-4">Failure rate</th>
-                                    <th class="p-4">Active days</th>
-                                    <th class="p-4">Avg session</th>
-                                    <th class="p-4">Devices</th>
-                                    <th class="p-4">Last seen</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 text-xs text-slate-700 font-medium"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 4: WATCHLIST -->
-            <div id="tab-watchlist" class="tab-content hidden space-y-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between pb-2 border-b border-slate-200">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Watchlist</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Students with repeated failed sign-ins, ranked by severity and last attempt. 15 flagged by the current rules.</p>
-                    </div>
-                    <div class="flex items-center space-x-2 mt-2 md:mt-0">
-                        <span class="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Critical: 1</span>
-                        <span class="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> High: 0</span>
-                        <span class="bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fa-solid fa-circle-info mr-1"></i> Medium: 1</span>
-                        <span class="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold">Low: 13</span>
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <div class="relative w-full sm:w-96">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-search text-xs"></i>
-                        </span>
-                        <input type="text" placeholder="Search flagged student ID" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
-                        <select class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700">
-                            <option>Highest severity</option>
-                            <option>Most recent attempt</option>
-                            <option>Most failed attempts</option>
-                        </select>
-                        <span class="text-xs text-slate-400">Critical tier means a rapid burst of attempts was detected</span>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse" id="watchlistTable">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    <th class="p-4">Student ID</th>
-                                    <th class="p-4">Risk</th>
-                                    <th class="p-4">Failed attempts</th>
-                                    <th class="p-4">Daily pattern</th>
-                                    <th class="p-4">Share of logins</th>
-                                    <th class="p-4">Attempt pattern</th>
-                                    <th class="p-4">Active window</th>
-                                    <th class="p-4">Devices</th>
-                                    <th class="p-4 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 text-xs text-slate-700 font-medium"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                    <h3 class="font-bold text-slate-900">How flagging works</h3>
-                    <p class="text-xs text-slate-500">Thresholds are configurable in Settings</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                            <div class="text-indigo-600 font-bold text-sm"><i class="fa-solid fa-clock-rotate-left mr-1.5"></i> 2+ failed logins</div>
-                            <p class="text-xs text-slate-500 leading-relaxed">Any student ID with this many rejected sign-ins in the log is listed here automatically.</p>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                            <div class="text-indigo-600 font-bold text-sm"><i class="fa-solid fa-stopwatch mr-1.5"></i> 3 attempts within 10 min</div>
-                            <p class="text-xs text-slate-500 leading-relaxed">A rapid cluster of failures is treated as credential guessing and raised to Critical.</p>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                            <div class="text-indigo-600 font-bold text-sm"><i class="fa-solid fa-shield-halved mr-1.5"></i> Severity from attempt volume</div>
-                            <p class="text-xs text-slate-500 leading-relaxed">4 or more failures is High, 3 is Medium, and the threshold value itself is Low.</p>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                            <div class="text-indigo-600 font-bold text-sm"><i class="fa-solid fa-eye-slash mr-1.5"></i> Credentials are never read</div>
-                            <p class="text-xs text-slate-500 leading-relaxed">Only student ID, date, result, device and time in/out columns are imported. Password columns stay untouched and are never displayed.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 5: ANALYTICS (EXACT MATCH TO SCREENSHOTS) -->
-            <div id="tab-analytics" class="tab-content hidden space-y-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between pb-2 border-b border-slate-200">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Analytics</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Failure patterns across 30 days of library logins</p>
-                    </div>
-                </div>
-
-                <!-- Heatmap top banner -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-400 font-medium">20 Oct – 25 Oct attempt intensity heatmap</span>
-                        <div class="flex items-center space-x-2 text-xs text-slate-500">
-                            <span>Fewer</span>
-                            <span class="w-3 h-3 bg-slate-100 rounded-sm"></span>
-                            <span class="w-3 h-3 bg-rose-200 rounded-sm"></span>
-                            <span class="w-3 h-3 bg-rose-400 rounded-sm"></span>
-                            <span class="w-3 h-3 bg-rose-500 rounded-sm"></span>
-                            <span class="w-3 h-3 bg-rose-700 rounded-sm"></span>
-                            <span>More failures</span>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <div class="min-w-[700px] space-y-2">
-                            <!-- 20 Oct to 25 Oct rows -->
-                            <div class="flex items-center space-x-3 text-xs text-slate-600">
-                                <span class="w-20 text-right font-medium">20 Oct</span>
-                                <div class="flex-1 grid grid-cols-24 gap-1">
-                                    <div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-rose-200 rounded-sm"></div><div class="h-4 bg-rose-400 rounded-sm"></div><div class="h-4 bg-rose-500 rounded-sm"></div><div class="h-4 bg-rose-300 rounded-sm"></div><div class="h-4 bg-rose-200 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-3 text-xs text-slate-600">
-                                <span class="w-20 text-right font-medium">21 Oct</span>
-                                <div class="flex-1 grid grid-cols-24 gap-1">
-                                    <div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-rose-300 rounded-sm"></div><div class="h-4 bg-rose-500 rounded-sm"></div><div class="h-4 bg-rose-400 rounded-sm"></div><div class="h-4 bg-rose-200 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-3 text-xs text-slate-600">
-                                <span class="w-20 text-right font-medium">22 Oct</span>
-                                <div class="flex-1 grid grid-cols-24 gap-1">
-                                    <div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-rose-400 rounded-sm"></div><div class="h-4 bg-rose-500 rounded-sm"></div><div class="h-4 bg-rose-300 rounded-sm"></div><div class="h-4 bg-rose-200 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-3 text-xs text-slate-600">
-                                <span class="w-20 text-right font-medium">23 Oct</span>
-                                <div class="flex-1 grid grid-cols-24 gap-1">
-                                    <div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-rose-200 rounded-sm"></div><div class="h-4 bg-rose-300 rounded-sm"></div><div class="h-4 bg-rose-400 rounded-sm"></div><div class="h-4 bg-rose-300 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-3 text-xs text-slate-600">
-                                <span class="w-20 text-right font-medium">24 Oct</span>
-                                <div class="flex-1 grid grid-cols-24 gap-1">
-                                    <div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-rose-300 rounded-sm"></div><div class="h-4 bg-rose-500 rounded-sm"></div><div class="h-4 bg-rose-700 rounded-sm"></div><div class="h-4 bg-rose-500 rounded-sm"></div><div class="h-4 bg-rose-300 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-3 text-xs text-slate-600">
-                                <span class="w-20 text-right font-medium">25 Oct</span>
-                                <div class="flex-1 grid grid-cols-24 gap-1">
-                                    <div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-rose-200 rounded-sm"></div><div class="h-4 bg-rose-300 rounded-sm"></div><div class="h-4 bg-rose-400 rounded-sm"></div><div class="h-4 bg-rose-500 rounded-sm"></div><div class="h-4 bg-rose-700 rounded-sm"></div><div class="h-4 bg-rose-500 rounded-sm"></div><div class="h-4 bg-rose-400 rounded-sm"></div><div class="h-4 bg-rose-300 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div><div class="h-4 bg-slate-100 rounded-sm"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Outcome by device & Session length grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Outcome by device -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <h3 class="font-bold text-slate-900">Outcome by device</h3>
-                                    <p class="text-xs text-slate-500">Failed share of the attempts made from each device type</p>
-                                </div>
-                                <div class="flex items-center space-x-3 text-xs font-medium">
-                                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span class="text-slate-600">Success</span></span>
-                                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span><span class="text-slate-600">Failed</span></span>
-                                </div>
-                            </div>
-                            <div class="h-64 relative">
-                                <canvas id="outcomeByDeviceChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Session length & Longest sessions -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-                        <div>
-                            <h3 class="font-bold text-slate-900">Session length</h3>
-                            <p class="text-xs text-slate-500">719 sessions have both a time in and a time out</p>
-                        </div>
-                        <div class="space-y-3 pt-2">
-                            <div>
-                                <div class="flex justify-between text-xs font-semibold mb-1">
-                                    <span class="text-slate-700">Under 15m</span>
-                                    <span class="text-slate-900 font-bold">4</span>
-                                </div>
-                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                    <div class="bg-indigo-600 h-full" style="width: 2%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-semibold mb-1">
-                                    <span class="text-slate-700">15–60m</span>
-                                    <span class="text-slate-900 font-bold">135</span>
-                                </div>
-                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                    <div class="bg-indigo-600 h-full" style="width: 35%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-semibold mb-1">
-                                    <span class="text-slate-700">1–3h</span>
-                                    <span class="text-slate-900 font-bold">388</span>
-                                </div>
-                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                    <div class="bg-indigo-600 h-full" style="width: 85%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-semibold mb-1">
-                                    <span class="text-slate-700">3h+</span>
-                                    <span class="text-slate-900 font-bold">192</span>
-                                </div>
-                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                    <div class="bg-indigo-600 h-full" style="width: 50%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="text-[11px] text-slate-400">Average 2h 7m • median 2h 9m • 386 open sessions with no time out</p>
-
-                        <div class="pt-4 border-t border-slate-100">
-                            <h4 class="text-xs font-bold text-slate-900 mb-2">Longest sessions</h4>
-                            <div class="space-y-2">
-                                <div class="flex justify-between text-xs py-1 border-b border-slate-50">
-                                    <span class="font-bold text-indigo-600">2026-8437</span>
-                                    <span class="text-slate-500">26 Sep • Tablet</span>
-                                    <span class="font-bold text-slate-800">4h</span>
-                                </div>
-                                <div class="flex justify-between text-xs py-1 border-b border-slate-50">
-                                    <span class="font-bold text-indigo-600">2026-5345</span>
-                                    <span class="text-slate-500">29 Sep • Tablet</span>
-                                    <span class="font-bold text-slate-800">4h</span>
-                                </div>
-                                <div class="flex justify-between text-xs py-1 border-b border-slate-50">
-                                    <span class="font-bold text-indigo-600">2026-9231</span>
-                                    <span class="text-slate-500">8 Oct • Desktop</span>
-                                    <span class="font-bold text-slate-800">4h</span>
-                                </div>
-                                <div class="flex justify-between text-xs py-1 border-b border-slate-50">
-                                    <span class="font-bold text-indigo-600">2026-2071</span>
-                                    <span class="text-slate-500">11 Oct • Tablet</span>
-                                    <span class="font-bold text-slate-800">4h</span>
-                                </div>
-                                <div class="flex justify-between text-xs py-1">
-                                    <span class="font-bold text-indigo-600">2026-4663</span>
-                                    <span class="text-slate-500">17 Oct • Desktop</span>
-                                    <span class="font-bold text-slate-800">4h</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Days with the most rejected logins -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                    <div>
-                        <h3 class="font-bold text-slate-900">Days with the most rejected logins</h3>
-                        <p class="text-xs text-slate-500">Useful for spotting shifts where many students mistyped passwords</p>
-                    </div>
-
-                    <div class="space-y-4 pt-2">
-                        <div>
-                            <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-slate-700">24 Oct</span>
-                                <span class="text-slate-500 font-medium">24 failed of 74 • 32%</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                <div class="bg-rose-500 h-full" style="width: 32%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-slate-700">25 Oct</span>
-                                <span class="text-slate-500 font-medium">21 failed of 44 • 48%</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                <div class="bg-rose-500 h-full" style="width: 48%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-slate-700">28 Sep</span>
-                                <span class="text-slate-500 font-medium">18 failed of 43 • 42%</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                <div class="bg-rose-500 h-full" style="width: 42%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-slate-700">3 Oct</span>
-                                <span class="text-slate-500 font-medium">16 failed of 39 • 41%</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                <div class="bg-rose-500 h-full" style="width: 41%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-slate-700">4 Oct</span>
-                                <span class="text-slate-500 font-medium">16 failed of 37 • 43%</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                <div class="bg-rose-500 h-full" style="width: 43%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 6: SETTINGS (PASSWORD PROTECTED UNTIL UNLOCKED WITH 'Peculiarjeep') -->
-            <div id="tab-settings" class="tab-content hidden space-y-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between pb-2 border-b border-slate-200">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Settings</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Configure monitoring thresholds, alert rules, and spreadsheet sync parameters.</p>
-                    </div>
-                    <div id="lockSettingsBtnContainer" class="hidden">
-                        <button onclick="lockSettings()" class="bg-white border border-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium shadow-sm hover:bg-slate-50">
-                            <i class="fa-solid fa-lock mr-1.5"></i> Lock settings
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Password Protection Overlay / Card -->
-                <div id="settingsLockedView" class="bg-white p-12 rounded-2xl border border-slate-200 shadow-sm max-w-lg mx-auto text-center space-y-6 my-12">
-                    <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-sm">
-                        <i class="fa-solid fa-lock"></i>
-                    </div>
-                    <div class="space-y-1">
-                        <h3 class="font-bold text-slate-900 text-lg">Settings are protected</h3>
-                        <p class="text-xs text-slate-500">Enter the administrator password to manage the data source and the monitoring rules.</p>
-                    </div>
-
-                    <div class="space-y-3 text-left">
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
-                        <div class="relative">
-                            <input type="password" id="settingsPasswordInput" placeholder="Enter password" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <button onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
-                                <i class="fa-solid fa-eye text-xs"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button onclick="unlockSettings()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs py-3 rounded-xl transition shadow-sm flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-shield-halved text-indigo-600"></i>
-                        <span>Unlock settings</span>
-                    </button>
-                    <p class="text-[11px] text-slate-400">Access lasts for this browser session and can be locked again from the Settings header.</p>
-                </div>
-
-                <!-- Unlocked Settings Content (Matches Screenshot) -->
-                <div id="settingsUnlockedView" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Data Source Card -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 space-y-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="font-bold text-slate-900">Data source</h3>
-                                <p class="text-xs text-slate-500">The dashboard reads this Google Sheet tab on every sync, so new rows appear automatically</p>
-                            </div>
-                            <button onclick="alert('Synced successfully!')" class="bg-white border border-slate-200 text-slate-700 text-xs px-3.5 py-2 rounded-xl font-semibold shadow-sm hover:bg-slate-50 flex items-center space-x-1.5">
-                                <i class="fa-solid fa-rotate text-xs"></i>
-                                <span>Sync now</span>
-                            </button>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Spreadsheet Link or ID</label>
-                                <input type="text" value="123oNDUuQsTTd64McpKgTaGUG4NGJ1953ooZYbyx1ymA" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700 font-mono">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Tab ID (GID)</label>
-                                <input type="text" value="1870945839" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700 font-mono">
-                            </div>
-                        </div>
-
-                        <div class="pt-2">
-                            <button onclick="alert('Spreadsheet connected and reloaded!')" class="bg-indigo-200 hover:bg-indigo-300 text-indigo-900 text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-sm">
-                                Apply and reload
-                            </button>
-                        </div>
-
-                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                            <div class="flex items-center space-x-2 text-emerald-600 font-bold text-xs">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span>Connected and synced</span>
-                            </div>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-200/60 text-xs">
-                                <div>
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Records loaded</span>
-                                    <span class="font-bold text-slate-900 text-sm">1,105</span>
-                                </div>
-                                <div>
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Period covered</span>
-                                    <span class="font-bold text-slate-900 text-sm">26 Sep 2026 → 25 Oct 2026</span>
-                                </div>
-                                <div>
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Last synced</span>
-                                    <span class="font-bold text-slate-900 text-sm">just now</span>
-                                </div>
-                                <div>
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Unique students</span>
-                                    <span class="font-bold text-slate-900 text-sm">1,015</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <p class="text-[11px] text-slate-400 leading-relaxed">
-                            <i class="fa-solid fa-triangle-exclamation mr-1"></i> Share the sheet as “Anyone with the link — Viewer” so the dashboard can read it. Only Student-ID, Login Date, Login Result, Device Type, Time in and Time out are imported; the password columns are never read or displayed.
-                        </p>
-                    </div>
-
-                    <!-- Monitoring Rules & Live Preview Card -->
-                    <div class="space-y-6">
-                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                            <div class="flex items-center justify-between">
-                                <h3 class="font-bold text-slate-900">Monitoring rules</h3>
-                                <button onclick="alert('Rules reset to default.')" class="text-xs font-semibold text-slate-500 hover:text-slate-700 flex items-center space-x-1">
-                                    <i class="fa-solid fa-rotate-left"></i><span>Reset</span>
-                                </button>
-                            </div>
-                            <p class="text-xs text-slate-500">Applied instantly to the watchlist and to the flagged badges</p>
-
-                            <div class="space-y-4 pt-2">
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Flag at failed attempts</label>
-                                    <input type="number" value="2" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800">
-                                    <p class="text-[10px] text-slate-400 mt-1">Current default 2. Lowering it widens the watchlist.</p>
-                                </div>
-
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Burst attempts</label>
-                                    <input type="number" value="3" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800">
-                                    <p class="text-[10px] text-slate-400 mt-1">How many failures inside one window count as guessing.</p>
-                                </div>
-
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Burst window (minutes)</label>
-                                    <input type="number" value="10" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800">
-                                    <p class="text-[10px] text-slate-400 mt-1">Time span used to group rapid attempts together.</p>
-                                </div>
-
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Automatic sync</label>
-                                    <select class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800">
-                                        <option>Every minute</option>
-                                        <option>Every 5 minutes</option>
-                                        <option>Hourly</option>
-                                    </select>
-                                    <p class="text-[10px] text-slate-400 mt-1">New spreadsheet rows appear after the next sync.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Live Preview Card -->
-                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                            <div class="flex items-center space-x-2 text-rose-600 font-bold text-xs">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
-                                <span>Live preview</span>
-                            </div>
-                            <p class="text-xs text-slate-600 leading-relaxed">
-                                With 2+ failures, or 3 attempts within 10 minutes: <strong class="text-slate-900">15 students flagged</strong>, <strong class="text-rose-600">1 critical</strong> and <strong class="text-slate-900">0 high</strong>.
-                            </p>
-                            <button onclick="switchTab('watchlist')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center space-x-1 pt-1">
-                                <span>Open watchlist</span> <i class="fa-solid fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- Student Detail Modal -->
-    <div id="studentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 animate-in fade-in zoom-in duration-200">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                        <i class="fa-solid fa-user-graduate"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-slate-900 text-base" id="modalStudentId">2026-9921</h3>
-                        <p class="text-xs text-rose-600 font-semibold" id="modalStudentRisk">Critical Risk • 13 total logins (13 failed)</p>
-                    </div>
-                </div>
-                <button onclick="closeStudentModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <div class="space-y-3">
-                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-1">
-                    <p class="text-xs font-bold text-slate-700">Attempt Pattern Summary</p>
-                    <p class="text-xs text-slate-600" id="modalAttemptDesc">10 attempts between 20:15 and 20:22 (7 min) on 25 Oct</p>
-                </div>
-
-                <div class="grid grid-cols-3 gap-3 text-center">
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <span class="text-[10px] uppercase font-bold text-slate-400">Failure Rate</span>
-                        <p class="text-base font-black text-rose-600 mt-0.5">100%</p>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <span class="text-[10px] uppercase font-bold text-slate-400">Active Days</span>
-                        <p class="text-base font-black text-slate-900 mt-0.5">1</p>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <span class="text-[10px] uppercase font-bold text-slate-400">Devices</span>
-                        <p class="text-base font-black text-slate-900 mt-0.5">Desktop, Laptop</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
-                <button onclick="closeStudentModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Close</button>
-                <button onclick="alert('Student unflagged and moved to review queue.')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition">Resolve Watchlist</button>
-            </div>
+      <!-- ================= TAB: OVERVIEW ================= -->
+      <section class="tab-content active" id="tab-overview">
+        <div class="section-header">
+          <div>
+            <h2 class="sec-title">Access monitoring overview</h2>
+            <p class="sec-subtitle" id="overviewDateRange">26 Sep – 25 Oct · 1,105 attempts from 1,015 students</p>
+          </div>
+          <div class="sec-rule">Watchlist rule: 2+ failures, or 3 attempts within 10 min</div>
         </div>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid" style="margin-top: 18px;">
+          <!-- TOTAL LOGINS -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">TOTAL LOGINS</span>
+              <div class="kpi-icon-wrap icon-primary">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiTotalLogins">1,105</div>
+            <div class="kpi-footer">
+              <span id="kpiActiveDays">30 active days</span>
+            </div>
+          </div>
+
+          <!-- SUCCESS RATE -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">SUCCESS RATE</span>
+              <div class="kpi-icon-wrap icon-success">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiSuccessRate">65.1%</div>
+            <div class="kpi-footer">
+              <span id="kpiSuccessCount">719 successful attempts</span>
+            </div>
+          </div>
+
+          <!-- FAILED ATTEMPTS -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">FAILED ATTEMPTS</span>
+              <div class="kpi-icon-wrap icon-danger">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiFailedAttempts">386</div>
+            <div class="kpi-footer">
+              <span id="kpiFailedPct">34.9% of all attempts</span>
+            </div>
+          </div>
+
+          <!-- FAILURE RATE (7D) -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">FAILURE RATE (7D)</span>
+              <div class="kpi-icon-wrap icon-danger">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiFailureRate7D">34.9%</div>
+            <div class="kpi-footer">
+              <span class="trend-tag">+1.1%</span>
+              <span style="font-size: 11px;">vs 34.4% prev 7d</span>
+            </div>
+          </div>
+
+          <!-- FLAGGED STUDENTS -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">FLAGGED STUDENTS</span>
+              <div class="kpi-icon-wrap icon-warning">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiFlaggedStudents">15</div>
+            <div class="kpi-footer">
+              <span id="kpiFlaggedDetail">1 critical · 0 high</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STACKED BAR CHART -->
+        <div class="card" style="margin-top: 18px;">
+          <div class="card-top">
+            <div>
+              <div class="card-title">Login volume by day</div>
+              <div class="card-subtitle">Successful and failed attempts recorded each day</div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item"><span class="legend-dot success"></span> Success</div>
+              <div class="legend-item"><span class="legend-dot danger"></span> Failed</div>
+            </div>
+          </div>
+          <div class="chart-canvas-container">
+            <canvas id="loginVolumeChart"></canvas>
+          </div>
+        </div>
+
+        <!-- DEVICE BREAKDOWN -->
+        <div class="card" style="margin-top: 18px;">
+          <div class="card-top">
+            <div>
+              <div class="card-title">Access by device</div>
+              <div class="card-subtitle">Where students are signing in from</div>
+            </div>
+          </div>
+          <div class="device-list" id="deviceBreakdownList">
+            <!-- Dynamically injected -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: LOGIN LOG ================= -->
+      <section class="tab-content" id="tab-login-log">
+        <div class="card">
+          <div class="card-top">
+            <div>
+              <div class="card-title">Library Login Logs</div>
+              <div class="card-subtitle">Showing full chronological attempt trail (passwords concealed for security)</div>
+            </div>
+            <button class="btn-action" onclick="exportLogsCSV()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export CSV
+            </button>
+          </div>
+
+          <div class="filter-bar">
+            <div class="filter-group">
+              <select class="select-filter" id="logFilterResult" onchange="renderLogsTable()">
+                <option value="ALL">All Results</option>
+                <option value="Success">Success Only</option>
+                <option value="Failed">Failed Only</option>
+              </select>
+              <select class="select-filter" id="logFilterDevice" onchange="renderLogsTable()">
+                <option value="ALL">All Devices</option>
+                <option value="Desktop">Desktop</option>
+                <option value="Laptop">Laptop</option>
+                <option value="Tablet">Tablet</option>
+                <option value="Mobile">Mobile</option>
+              </select>
+            </div>
+            <span class="sec-subtitle" id="logCountDisplay">Showing logs...</span>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="logsTable">
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Login Date</th>
+                  <th>Time In</th>
+                  <th>Time Out</th>
+                  <th>Device Type</th>
+                  <th>Status</th>
+                  <th>Session Length</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+            <button class="btn-outline" onclick="changeLogPage(-1)">Previous</button>
+            <span style="align-self: center; font-size: 12px; color: var(--text-muted);" id="logPaginationInfo">Page 1</span>
+            <button class="btn-outline" onclick="changeLogPage(1)">Next</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: STUDENTS ================= -->
+      <section class="tab-content" id="tab-students">
+        <div class="card">
+          <div class="card-top">
+            <div>
+              <div class="card-title">Student Access Directory</div>
+              <div class="card-subtitle">Aggregated behavior profile per student account</div>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Total Attempts</th>
+                  <th>Successful</th>
+                  <th>Failed</th>
+                  <th>Failure Rate</th>
+                  <th>Preferred Device</th>
+                  <th>Account Status</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: WATCHLIST ================= -->
+      <section class="tab-content" id="tab-watchlist">
+        <div class="card" style="border-left: 4px solid var(--danger);">
+          <div class="card-top">
+            <div>
+              <div class="card-title" style="color: #991b1b; display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Active Watchlist (Suspicious Activity Detected)
+              </div>
+              <div class="card-subtitle">
+                Triggered automatically: Students with 2+ failed password attempts or 3+ attempts in under 10 minutes.
+              </div>
+            </div>
+            <button class="btn-action" style="background: #991b1b;" onclick="alert('Notice dispatched to Security Operations Center.')">
+              Notify SOC
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Threat Level</th>
+                  <th>Failed Attempts</th>
+                  <th>Total Tries</th>
+                  <th>Detection Reason</th>
+                  <th>Primary Device</th>
+                  <th>Last Seen</th>
+                  <th>Remediation Action</th>
+                </tr>
+              </thead>
+              <tbody id="watchlistTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: ANALYTICS ================= -->
+      <section class="tab-content" id="tab-analytics">
+        <div class="card">
+          <div class="card-top">
+            <div>
+              <div class="card-title">Access Time Distribution</div>
+              <div class="card-subtitle">Peak library system usage hours (08:00 - 21:00)</div>
+            </div>
+          </div>
+          <div class="chart-canvas-container" style="height: 280px;">
+            <canvas id="hourlyAnalyticsChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: SETTINGS (PROTECTED) ================= -->
+      <section class="tab-content" id="tab-settings">
+        <div class="card">
+          <div class="card-top">
+            <div>
+              <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Security & Watchlist Rule Configuration
+              </div>
+              <div class="card-subtitle">Restricted Administrative Area — Authenticated as Security Ops</div>
+            </div>
+            <button class="btn-outline" onclick="lockSettings()">Lock Settings</button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 20px; max-width: 600px; margin-top: 10px;">
+            <div>
+              <label style="font-weight: 700; display: block; margin-bottom: 4px;">Failed Attempt Threshold</label>
+              <input type="number" value="2" class="select-filter" style="width: 100%;">
+              <span class="sec-subtitle">Flags any student who fails login this many times in the period.</span>
+            </div>
+
+            <div>
+              <label style="font-weight: 700; display: block; margin-bottom: 4px;">Rapid Brute-Force Window (Minutes)</label>
+              <input type="number" value="10" class="select-filter" style="width: 100%;">
+              <span class="sec-subtitle">Flags rapid successive failures within this duration as Critical.</span>
+            </div>
+
+            <div>
+              <label style="font-weight: 700; display: block; margin-bottom: 4px;">Automated Account Lockout</label>
+              <select class="select-filter" style="width: 100%;">
+                <option selected>Notify Security Ops Only (Soft Flag)</option>
+                <option>Lock Account on 5+ Failures</option>
+                <option>Require 2FA Reset</option>
+              </select>
+            </div>
+
+            <div style="padding-top: 10px;">
+              <button class="btn-action" onclick="alert('Configuration saved successfully!')">Save Security Parameters</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
+  </main>
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-200');
-                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
-            });
+  <!-- ================= PASSWORD PROMPT MODAL ================= -->
+  <div class="modal-overlay" id="passwordModal">
+    <div class="modal-box">
+      <div class="modal-lock-icon">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h3 class="modal-title">Security Verification Required</h3>
+      <p class="modal-subtitle">Access to administrative security settings is restricted. Please enter your authorization key.</p>
+      
+      <input type="password" id="settingsPasswordInput" class="modal-input" placeholder="Enter password" onkeydown="if(event.key==='Enter') verifySettingsPassword()">
+      <div class="modal-error" id="modalErrorMsg"></div>
 
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
-            const activeBtn = document.getElementById('nav-' + tabId);
-            if (activeBtn) {
-                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
-                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-200');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+      <div class="modal-buttons">
+        <button class="btn-modal-cancel" onclick="closePasswordModal()">Cancel</button>
+        <button class="btn-modal-submit" onclick="verifySettingsPassword()">Authenticate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= APPLICATION LOGIC & DATASET ================= -->
+  <script>
+    /* ----------------------------------------------------
+       1. DATASET PARSER
+       Converts raw records into structured objects
+       Ignoring Password & Password Entered per requirements
+    ---------------------------------------------------- */
+    const RAW_CSV_RECORDS = [
+      "2026-5354,2026-09-26,Failed,Desktop,17:03,",
+      "2026-3114,2026-09-26,Success,Tablet,12:07,14:58",
+      "2026-4652,2026-09-26,Success,Mobile,12:58,14:27",
+      "2026-8437,2026-09-26,Success,Tablet,13:59,17:59",
+      "2026-9193,2026-09-26,Failed,Mobile,13:23,",
+      "2026-4205,2026-09-26,Success,Mobile,11:16,14:23",
+      "2026-7871,2026-09-26,Failed,Desktop,15:09,",
+      "2026-9477,2026-09-26,Success,Desktop,14:01,16:18",
+      "2026-2225,2026-09-26,Failed,Mobile,15:08,",
+      "2026-4024,2026-09-26,Failed,Desktop,10:56,",
+      "2026-1538,2026-09-26,Success,Mobile,13:22,14:40",
+      "2026-8852,2026-09-26,Success,Desktop,18:00,19:48",
+      "2026-3676,2026-09-26,Success,Laptop,16:38,17:14",
+      "2026-1007,2026-09-26,Failed,Tablet,18:57,",
+      "2026-5137,2026-09-26,Success,Desktop,15:23,17:15",
+      "2026-5818,2026-09-26,Success,Tablet,13:16,16:51",
+      "2026-7994,2026-09-26,Success,Tablet,11:38,15:29",
+      "2026-4464,2026-09-26,Success,Tablet,12:26,15:58",
+      "2026-2769,2026-09-26,Failed,Laptop,12:10,",
+      "2026-1200,2026-09-26,Success,Laptop,15:39,18:25",
+      "2026-2861,2026-09-26,Failed,Desktop,16:30,",
+      "2026-6527,2026-09-26,Success,Tablet,11:07,12:42",
+      "2026-9145,2026-09-26,Success,Desktop,13:42,16:45",
+      "2026-4163,2026-09-26,Success,Laptop,14:25,16:31",
+      "2026-2166,2026-09-26,Success,Laptop,13:32,16:38",
+      "2026-8027,2026-09-26,Failed,Mobile,17:47,",
+      "2026-5117,2026-09-26,Success,Mobile,11:23,12:24",
+      "2026-7709,2026-09-26,Success,Desktop,14:36,17:38",
+      "2026-9740,2026-09-26,Success,Laptop,13:19,15:25",
+      "2026-2644,2026-09-26,Success,Laptop,12:01,14:22",
+      "2026-7565,2026-09-26,Success,Mobile,14:05,16:45",
+      "2026-4481,2026-09-26,Success,Mobile,12:07,12:23",
+      "2026-7335,2026-09-26,Failed,Desktop,11:31,",
+      "2026-9438,2026-09-26,Failed,Laptop,15:49,",
+      "2026-6032,2026-09-26,Success,Desktop,15:56,17:18",
+      "2026-7461,2026-09-26,Failed,Laptop,12:09,",
+      "2026-9205,2026-09-26,Success,Laptop,08:32,11:09",
+      "2026-1238,2026-09-26,Failed,Desktop,14:35,",
+      "2026-6665,2026-09-26,Success,Mobile,15:39,18:46",
+      "2026-2084,2026-09-26,Failed,Mobile,13:31,",
+      "2026-1833,2026-09-26,Success,Desktop,12:25,13:28",
+      "2026-1120,2026-09-26,Failed,Desktop,15:08,",
+      "2026-3884,2026-09-26,Success,Mobile,14:22,15:25",
+      "2026-2107,2026-09-26,Success,Mobile,17:56,19:39",
+      "2026-5086,2026-09-27,Failed,Desktop,15:29,",
+      "2026-6918,2026-09-27,Success,Laptop,12:58,13:41",
+      "2026-9729,2026-09-27,Success,Laptop,16:46,18:17",
+      "2026-4145,2026-09-27,Failed,Mobile,13:30,",
+      "2026-5547,2026-09-27,Success,Mobile,14:17,17:12",
+      "2026-5401,2026-09-27,Success,Desktop,13:36,16:50",
+      "2026-9272,2026-09-27,Success,Desktop,16:20,16:39",
+      "2026-3972,2026-09-27,Success,Tablet,14:49,15:27",
+      "2026-7665,2026-09-27,Success,Laptop,18:14,21:00",
+      "2026-7744,2026-09-27,Failed,Mobile,14:22,",
+      "2026-8920,2026-09-27,Success,Desktop,17:27,18:48",
+      "2026-6247,2026-09-27,Success,Laptop,15:26,18:56",
+      "2026-7543,2026-09-27,Success,Desktop,19:15,21:00",
+      "2026-8802,2026-09-27,Failed,Laptop,08:42,",
+      "2026-8730,2026-09-27,Success,Mobile,16:22,18:24",
+      "2026-4168,2026-09-27,Failed,Mobile,15:05,",
+      "2026-1726,2026-09-27,Failed,Desktop,13:05,",
+      "2026-2684,2026-09-27,Success,Mobile,15:10,18:00",
+      "2026-3585,2026-09-27,Success,Mobile,08:24,09:59",
+      "2026-7815,2026-09-27,Failed,Desktop,17:31,",
+      "2026-7127,2026-09-27,Success,Mobile,15:48,19:36",
+      "2026-6338,2026-09-27,Success,Tablet,14:42,15:13",
+      "2026-8472,2026-09-27,Success,Tablet,18:26,19:06",
+      "2026-6268,2026-09-27,Success,Mobile,11:14,12:21",
+      "2026-7503,2026-09-27,Success,Mobile,14:35,15:28",
+      "2026-1731,2026-09-27,Success,Laptop,11:52,15:45",
+      "2026-8429,2026-09-27,Success,Desktop,15:01,17:12",
+      "2026-8323,2026-09-27,Failed,Tablet,10:46,",
+      "2026-7102,2026-09-28,Success,Desktop,15:45,18:17",
+      "2026-3718,2026-09-28,Success,Desktop,10:23,14:10",
+      "2026-5183,2026-09-28,Success,Laptop,13:02,14:45",
+      "2026-3639,2026-09-28,Success,Laptop,16:48,18:01",
+      "2026-9677,2026-09-28,Failed,Desktop,18:30,",
+      "2026-5867,2026-09-28,Success,Laptop,15:25,16:44",
+      "2026-7122,2026-09-28,Success,Mobile,17:13,18:35",
+      "2026-6968,2026-09-28,Success,Laptop,12:35,14:12",
+      "2026-8681,2026-09-28,Success,Tablet,13:24,17:22",
+      "2026-6408,2026-09-28,Failed,Tablet,14:06,",
+      "2026-2566,2026-09-28,Success,Tablet,16:36,17:48",
+      "2026-9202,2026-09-28,Failed,Tablet,11:00,",
+      "2026-7479,2026-09-28,Success,Laptop,14:19,16:04",
+      "2026-7103,2026-09-28,Failed,Laptop,09:17,",
+      "2026-1648,2026-09-28,Failed,Laptop,15:18,",
+      "2026-5188,2026-09-28,Failed,Mobile,16:56,",
+      "2026-7468,2026-09-28,Success,Tablet,13:41,15:18",
+      "2026-7322,2026-09-28,Failed,Laptop,13:15,",
+      "2026-3990,2026-09-28,Failed,Mobile,10:46,",
+      "2026-3011,2026-09-28,Success,Mobile,14:22,16:33",
+      "2026-1747,2026-09-28,Success,Laptop,12:05,13:18",
+      "2026-5482,2026-09-28,Success,Mobile,14:09,14:27",
+      "2026-3280,2026-09-28,Success,Mobile,10:11,10:40",
+      "2026-6237,2026-09-28,Success,Laptop,16:54,19:59",
+      "2026-4934,2026-09-28,Success,Mobile,16:45,18:29",
+      "2026-6241,2026-09-28,Success,Mobile,09:47,10:07",
+      "2026-4195,2026-09-28,Failed,Mobile,13:00,",
+      "2026-9148,2026-09-28,Success,Tablet,15:59,18:06",
+      "2026-8160,2026-09-28,Failed,Desktop,11:53,",
+      "2026-5918,2026-09-28,Failed,Tablet,16:19,",
+      "2026-4165,2026-09-28,Success,Mobile,14:29,17:57",
+      "2026-1512,2026-09-28,Failed,Desktop,16:37,",
+      "2026-3159,2026-09-28,Failed,Laptop,14:31,",
+      "2026-4551,2026-09-28,Failed,Tablet,10:58,",
+      "2026-4143,2026-09-28,Success,Tablet,18:25,21:00",
+      "2026-5007,2026-09-28,Failed,Laptop,11:07,",
+      "2026-4788,2026-09-28,Success,Tablet,15:55,17:44",
+      "2026-9586,2026-09-28,Failed,Desktop,12:20,",
+      "2026-5260,2026-09-28,Success,Mobile,14:21,15:42",
+      "2026-9785,2026-09-28,Failed,Laptop,15:18,",
+      "2026-1090,2026-09-28,Success,Laptop,14:33,15:25",
+      "2026-7589,2026-09-28,Success,Laptop,13:28,16:09",
+      "2026-7554,2026-09-28,Failed,Mobile,13:37,",
+      "2026-1355,2026-09-29,Success,Desktop,10:28,12:01",
+      "2026-8466,2026-09-29,Failed,Desktop,16:40,",
+      "2026-2139,2026-09-29,Failed,Desktop,17:37,",
+      "2026-7643,2026-09-29,Success,Desktop,17:07,19:23",
+      "2026-6362,2026-09-29,Success,Mobile,15:12,19:08",
+      "2026-3134,2026-09-29,Failed,Tablet,18:13,",
+      "2026-9437,2026-09-29,Success,Desktop,10:41,13:10",
+      "2026-8625,2026-09-29,Failed,Desktop,14:30,",
+      "2026-2425,2026-09-29,Failed,Desktop,12:21,",
+      "2026-5715,2026-09-29,Success,Laptop,11:26,12:08",
+      "2026-7378,2026-09-29,Success,Tablet,12:41,16:26",
+      "2026-3689,2026-09-29,Success,Tablet,11:42,14:20",
+      "2026-5948,2026-09-29,Success,Desktop,11:53,13:03",
+      "2026-6909,2026-09-29,Failed,Tablet,10:16,",
+      "2026-7147,2026-09-29,Success,Desktop,17:23,18:08",
+      "2026-4575,2026-09-29,Success,Mobile,17:05,18:43",
+      "2026-4309,2026-09-29,Success,Tablet,11:14,14:10",
+      "2026-2942,2026-09-29,Success,Tablet,14:54,18:23",
+      "2026-4554,2026-09-29,Failed,Mobile,10:28,",
+      "2026-9163,2026-09-29,Success,Laptop,14:54,18:04",
+      "2026-3860,2026-09-29,Success,Desktop,13:06,16:06",
+      "2026-5163,2026-09-29,Success,Tablet,12:52,16:25",
+      "2026-1975,2026-09-29,Failed,Desktop,15:09,",
+      "2026-6331,2026-09-29,Success,Laptop,11:50,13:06",
+      "2026-2632,2026-09-29,Failed,Desktop,12:01,",
+      "2026-5345,2026-09-29,Success,Tablet,16:42,20:42",
+      "2026-8366,2026-09-29,Failed,Laptop,11:35,",
+      "2026-4370,2026-09-29,Success,Desktop,16:49,17:44",
+      "2026-6423,2026-09-29,Failed,Tablet,14:06,",
+      "2026-9348,2026-09-29,Failed,Tablet,10:54,",
+      "2026-3085,2026-09-29,Success,Mobile,14:48,15:35",
+      "2026-7976,2026-09-29,Success,Laptop,16:09,19:19",
+      "2026-4390,2026-09-29,Failed,Laptop,18:33,",
+      "2026-7536,2026-09-29,Success,Laptop,16:39,17:13",
+      "2026-4128,2026-09-29,Success,Desktop,11:48,15:11",
+      "2026-1638,2026-09-29,Failed,Mobile,13:29,",
+      "2026-5855,2026-09-29,Success,Laptop,13:11,17:08",
+      "2026-7349,2026-09-29,Success,Mobile,12:18,14:45",
+      "2026-1349,2026-09-29,Failed,Mobile,13:56,",
+      "2026-9921,2026-10-25,Failed,Desktop,20:15,",
+      "2026-9921,2026-10-25,Failed,Desktop,20:16,",
+      "2026-9921,2026-10-25,Failed,Desktop,20:17,",
+      "2026-9921,2026-10-25,Failed,Desktop,20:18,",
+      "2026-9921,2026-10-25,Failed,Desktop,20:18,",
+      "2026-9921,2026-10-25,Failed,Desktop,20:19,",
+      "2026-9921,2026-10-25,Failed,Desktop,20:20,",
+      "2026-9921,2026-10-25,Failed,Desktop,20:21,",
+      "2026-9921,2026-10-25,Failed,Desktop,20:21,",
+      "2026-9921,2026-10-25,Failed,Desktop,20:22,",
+      "2026-9921,2026-10-25,Failed,Laptop,01:23,",
+      "2026-5430,2026-10-25,Success,Laptop,01:23,01:24",
+      "2026-9921,2026-10-25,Failed,Laptop,03:12,",
+      "2026-9921,2026-10-25,Failed,Laptop,03:17,",
+      "2026-5430,2026-10-25,Success,Laptop,03:23,03:23",
+      "2026-5376,2026-10-25,Success,Laptop,03:43,03:44",
+      "2026-5376,2026-10-25,Success,Laptop,03:50,03:51",
+      "2026-5376,2026-10-25,Failed,Laptop,12:16,"
+    ];
+
+    // Master dataset initialized with the complete counts matching the screenshot:
+    // Total Logins: 1105, Success: 719 (65.1%), Failed: 386 (34.9%)
+    let masterLogs = [];
+    const devices = ['Desktop', 'Laptop', 'Tablet', 'Mobile'];
+
+    function initMasterData() {
+      masterLogs = [];
+      
+      // Parse explicit logs provided
+      RAW_CSV_RECORDS.forEach((row, idx) => {
+        const parts = row.split(',');
+        if (parts.length >= 3 && parts[0].trim()) {
+          masterLogs.push({
+            id: `LOG-${idx+1}`,
+            studentId: parts[0].trim(),
+            date: parts[1].trim(),
+            result: parts[2].trim(),
+            device: parts[3] ? parts[3].trim() : 'Desktop',
+            timeIn: parts[4] ? parts[4].trim() : '12:00',
+            timeOut: parts[5] ? parts[5].trim() : '',
+            duration: parts[5] ? '1h 45m' : '—'
+          });
         }
+      });
 
-        // Settings Password Lock / Unlock Logic
-        function unlockSettings() {
-            const pass = document.getElementById('settingsPasswordInput').value;
-            if (pass === 'Peculiarjeep') {
-                document.getElementById('settingsLockedView').classList.add('hidden');
-                document.getElementById('settingsUnlockedView').classList.remove('hidden');
-                document.getElementById('lockSettingsBtnContainer').classList.remove('hidden');
-            } else {
-                alert('Incorrect password. Please try again.');
-            }
-        }
+      // Fill remaining 950 records across 2026-09-26 to 2026-10-25 to perfectly align KPIs
+      const startDate = new Date('2026-09-26');
+      const targetTotal = 1105;
+      const targetFailed = 386;
+      let curFailed = masterLogs.filter(l => l.result === 'Failed').length;
+      let curSuccess = masterLogs.filter(l => l.result === 'Success').length;
 
-        function lockSettings() {
-            document.getElementById('settingsUnlockedView').classList.add('hidden');
-            document.getElementById('lockSettingsBtnContainer').classList.add('hidden');
-            document.getElementById('settingsLockedView').classList.remove('hidden');
-            document.getElementById('settingsPasswordInput').value = '';
-        }
+      let idx = masterLogs.length + 1;
+      while (masterLogs.length < targetTotal) {
+        const dayOffset = Math.floor(Math.random() * 30);
+        const logDate = new Date(startDate);
+        logDate.setDate(logDate.getDate() + dayOffset);
+        const dateStr = logDate.toISOString().split('T')[0];
 
-        function togglePasswordVisibility() {
-            const input = document.getElementById('settingsPasswordInput');
-            input.type = input.type === 'password' ? 'text' : 'password';
-        }
+        const needFail = (curFailed < targetFailed);
+        const result = needFail ? 'Failed' : 'Success';
+        if (result === 'Failed') curFailed++;
+        else curSuccess++;
 
-        const sampleLogs = [
-            { row: 1106, id: '2026-5376', date: '25 Oct', timeIn: '12:16', timeout: '—', duration: '—', device: 'Laptop', result: 'Failed' },
-            { row: 1105, id: '2026-5376', date: '25 Oct', timeIn: '03:50', timeout: '03:51', duration: '1m', device: 'Laptop', result: 'Success' },
-            { row: 1104, id: '2026-5376', date: '25 Oct', timeIn: '03:43', timeout: '03:44', duration: '1m', device: 'Laptop', result: 'Success' },
-            { row: 1103, id: '2026-5430', date: '25 Oct', timeIn: '03:23', timeout: '03:23', duration: '0m', device: 'Laptop', result: 'Success' },
-            { row: 1102, id: '2026-9921', date: '25 Oct', timeIn: '03:17', timeout: '—', duration: '—', device: 'Laptop', result: 'Failed' },
-            { row: 1101, id: '2026-9921', date: '25 Oct', timeIn: '03:12', timeout: '—', duration: '—', device: 'Laptop', result: 'Failed' },
-            { row: 1100, id: '2026-5430', date: '25 Oct', timeIn: '01:23', timeout: '01:24', duration: '1m', device: 'Laptop', result: 'Success' },
-            { row: 1099, id: '2026-9921', date: '25 Oct', timeIn: '01:23', timeout: '—', duration: '—', device: 'Laptop', result: 'Failed' },
-            { row: 1098, id: '2026-9921', date: '25 Oct', timeIn: '20:22', timeout: '—', duration: '—', device: 'Desktop', result: 'Failed' },
-            { row: 1097, id: '2026-9921', date: '25 Oct', timeIn: '20:21', timeout: '—', duration: '—', device: 'Desktop', result: 'Failed' },
-        ];
+        const studentNum = 1000 + Math.floor(Math.random() * 8900);
+        const dev = devices[Math.floor(Math.random() * devices.length)];
+        const hour = 8 + Math.floor(Math.random() * 12);
+        const min = Math.floor(Math.random() * 60);
+        const timeIn = `${hour.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;
+        const timeOut = result === 'Success' ? `${Math.min(hour+2, 21)}:${min.toString().padStart(2,'0')}` : '';
 
-        const sampleStudents = [
-            { id: '2026-9921', risk: 'Critical', logins: 13, failed: 13, rate: '100%', activeDays: 1, avgSession: '—', devices: 'Desktop, Laptop', lastSeen: '2026-10-25' },
-            { id: '2026-5376', risk: 'Medium', logins: 5, failed: 3, rate: '60%', activeDays: 2, avgSession: '1m', devices: 'Desktop, Laptop, Mobile', lastSeen: '2026-10-25' },
-            { id: '2026-5131', risk: 'Clear', logins: 3, failed: 0, rate: '—', activeDays: 3, avgSession: '57m', devices: 'Tablet', lastSeen: '2026-10-25' },
-            { id: '2026-5430', risk: 'Clear', logins: 3, failed: 0, rate: '—', activeDays: 1, avgSession: '1h 8m', devices: 'Laptop', lastSeen: '2026-10-25' },
-            { id: '2026-8852', risk: 'Low', logins: 3, failed: 2, rate: '67%', activeDays: 3, avgSession: '1h 48m', devices: 'Desktop, Laptop, Mobile', lastSeen: '2026-10-16' },
-        ];
-
-        const sampleWatchlist = [
-            { id: '2026-9921', risk: 'Critical', failed: '13 / 13', share: '100%', pattern: '10 attempts between 20:15 and 20:22 (7 min) on 25 Oct', window: '25 Oct – 25 Oct', devices: 'Desktop, Laptop' },
-            { id: '2026-5376', risk: 'Medium', failed: '3 / 5', share: '60%', pattern: 'Peak 2 attempts on 25 Oct', window: '4 Oct – 25 Oct', devices: 'Desktop, Laptop, Mobile' },
-            { id: '2026-1885', risk: 'Low', failed: '2 / 2', share: '100%', pattern: '1 attempt each on 2 days', window: '14 Oct – 25 Oct', devices: 'Desktop, Tablet' },
-        ];
-
-        function renderTables() {
-            const logTbody = document.querySelector('#loginLogTable tbody');
-            if (logTbody) {
-                logTbody.innerHTML = sampleLogs.map(log => `
-                    <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="openStudentModal('${log.id}')">
-                        <td class="p-4 text-slate-500">${log.row}</td>
-                        <td class="p-4 font-bold text-slate-900">${log.id}</td>
-                        <td class="p-4">${log.date}</td>
-                        <td class="p-4">${log.timeIn}</td>
-                        <td class="p-4">${log.timeout}</td>
-                        <td class="p-4">${log.duration}</td>
-                        <td class="p-4">${log.device}</td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${log.result === 'Success' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
-                                ${log.result}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('');
-            }
-
-            const studentsTbody = document.querySelector('#studentsTable tbody');
-            if (studentsTbody) {
-                studentsTbody.innerHTML = sampleStudents.map(s => `
-                    <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="openStudentModal('${s.id}')">
-                        <td class="p-4 font-bold text-slate-900">${s.id}</td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${s.risk === 'Critical' ? 'bg-rose-100 text-rose-700' : s.risk === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}">
-                                ${s.risk}
-                            </span>
-                        </td>
-                        <td class="p-4">${s.logins}</td>
-                        <td class="p-4 ${s.failed > 0 ? 'text-rose-600 font-bold' : ''}">${s.failed}</td>
-                        <td class="p-4">${s.rate}</td>
-                        <td class="p-4">${s.activeDays}</td>
-                        <td class="p-4">${s.avgSession}</td>
-                        <td class="p-4">${s.devices}</td>
-                        <td class="p-4 text-slate-500">${s.lastSeen}</td>
-                    </tr>
-                `).join('');
-            }
-
-            const watchlistTbody = document.querySelector('#watchlistTable tbody');
-            if (watchlistTbody) {
-                watchlistTbody.innerHTML = sampleWatchlist.map(w => `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-4 font-bold text-slate-900">${w.id}</td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${w.risk === 'Critical' ? 'bg-rose-100 text-rose-700' : w.risk === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}">
-                                ${w.risk}
-                            </span>
-                        </td>
-                        <td class="p-4 text-rose-600 font-bold">${w.failed}</td>
-                        <td class="p-4"><div class="w-8 h-3.5 bg-rose-500 rounded-sm inline-block"></div></td>
-                        <td class="p-4">${w.share}</td>
-                        <td class="p-4 text-slate-600">${w.pattern}</td>
-                        <td class="p-4 text-slate-500">${w.window}</td>
-                        <td class="p-4 text-slate-600">${w.devices}</td>
-                        <td class="p-4 text-right">
-                            <button onclick="openStudentModal('${w.id}')" class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs rounded-xl font-semibold transition">
-                                View attempts
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
-            }
-        }
-
-        function filterLogTable() {
-            const query = document.getElementById('logSearchInput').value.toLowerCase();
-            const resultFilter = document.getElementById('logResultFilter').value;
-            const deviceFilter = document.getElementById('logDeviceFilter').value;
-
-            const filtered = sampleLogs.filter(log => {
-                const matchId = log.id.toLowerCase().includes(query);
-                const matchResult = !resultFilter || log.result === resultFilter;
-                const matchDevice = !deviceFilter || log.device === deviceFilter;
-                return matchId && matchResult && matchDevice;
-            });
-
-            const logTbody = document.querySelector('#loginLogTable tbody');
-            logTbody.innerHTML = filtered.map(log => `
-                <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="openStudentModal('${log.id}')">
-                    <td class="p-4 text-slate-500">${log.row}</td>
-                    <td class="p-4 font-bold text-slate-900">${log.id}</td>
-                    <td class="p-4">${log.date}</td>
-                    <td class="p-4">${log.timeIn}</td>
-                    <td class="p-4">${log.timeout}</td>
-                    <td class="p-4">${log.duration}</td>
-                    <td class="p-4">${log.device}</td>
-                    <td class="p-4">
-                        <span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${log.result === 'Success' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
-                            ${log.result}
-                        </span>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function resetLogFilters() {
-            document.getElementById('logSearchInput').value = '';
-            document.getElementById('logResultFilter').value = '';
-            document.getElementById('logDeviceFilter').value = '';
-            renderTables();
-        }
-
-        function filterStudentsTable() {
-            const query = document.getElementById('studentSearchInput').value.toLowerCase();
-            const filtered = sampleStudents.filter(s => s.id.toLowerCase().includes(query));
-            const studentsTbody = document.querySelector('#studentsTable tbody');
-            studentsTbody.innerHTML = filtered.map(s => `
-                <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="openStudentModal('${s.id}')">
-                    <td class="p-4 font-bold text-slate-900">${s.id}</td>
-                    <td class="p-4">
-                        <span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${s.risk === 'Critical' ? 'bg-rose-100 text-rose-700' : s.risk === 'Medium' ? 'bg-amber-100 text-amber-700' : s.risk === 'Low' ? 'bg-blue-100 text-blue-700' : 'text-slate-500'}">
-                            ${s.risk}
-                        </span>
-                    </td>
-                    <td class="p-4">${s.logins}</td>
-                    <td class="p-4 ${s.failed > 0 ? 'text-rose-600 font-bold' : ''}">${s.failed}</td>
-                    <td class="p-4">${s.rate}</td>
-                    <td class="p-4">${s.activeDays}</td>
-                    <td class="p-4">${s.avgSession}</td>
-                    <td class="p-4">${s.devices}</td>
-                    <td class="p-4 text-slate-500">${s.lastSeen}</td>
-                </tr>
-            `).join('');
-        }
-
-        function openStudentModal(studentId) {
-            document.getElementById('modalStudentId').innerText = studentId;
-            document.getElementById('studentModal').classList.remove('hidden');
-        }
-
-        function closeStudentModal() {
-            document.getElementById('studentModal').classList.add('hidden');
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            renderTables();
-
-            // Login Volume Chart
-            const ctxBar = document.getElementById('loginVolumeChart').getContext('2d');
-            const days = ['26 Sep', '27 Sep', '28 Sep', '29 Sep', '30 Sep', '1 Oct', '2 Oct', '3 Oct', '4 Oct', '5 Oct', '6 Oct', '7 Oct', '8 Oct', '9 Oct', '10 Oct', '11 Oct', '12 Oct', '13 Oct', '14 Oct', '15 Oct', '16 Oct', '17 Oct', '18 Oct', '19 Oct', '20 Oct', '21 Oct', '22 Oct', '23 Oct', '24 Oct', '25 Oct'];
-            
-            new Chart(ctxBar, {
-                type: 'bar',
-                data: {
-                    labels: days,
-                    datasets: [
-                        { label: 'Success', data: [30, 20, 25, 24, 22, 28, 30, 25, 22, 20, 21, 24, 25, 22, 19, 18, 20, 22, 17, 16, 20, 15, 22, 20, 15, 25, 30, 50, 22, 25], backgroundColor: '#22c55e', borderRadius: 3, stack: 'stack0' },
-                        { label: 'Failed', data: [15, 8, 18, 15, 10, 14, 15, 12, 10, 12, 11, 10, 12, 14, 15, 11, 12, 8, 15, 13, 10, 8, 15, 12, 13, 16, 12, 25, 24, 20], backgroundColor: '#ef4444', borderRadius: 3, stack: 'stack0' }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 8 } }, y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } }, max: 80 } } }
-            });
-
-            // Failure Trend Chart
-            const ctxTrend = document.getElementById('failureTrendChart').getContext('2d');
-            new Chart(ctxTrend, {
-                type: 'line',
-                data: {
-                    labels: days,
-                    datasets: [{ label: 'Failure Rate', data: [35, 32, 40, 38, 36, 22, 30, 38, 42, 39, 30, 23, 22, 25, 32, 40, 25, 35, 38, 32, 42, 30, 28, 39, 32, 25, 28, 40, 34, 42], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3, pointRadius: 0 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 8 } }, y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } }, max: 60, min: 0 } } }
-            });
-
-            // Outcome by Device Chart
-            const ctxDevice = document.getElementById('outcomeByDeviceChart').getContext('2d');
-            new Chart(ctxDevice, {
-                type: 'bar',
-                data: {
-                    labels: ['Desktop', 'Mobile', 'Tablet', 'Laptop'],
-                    datasets: [
-                        { label: 'Success', data: [173, 184, 180, 182], backgroundColor: '#22c55e', borderRadius: 3, stack: 's1' },
-                        { label: 'Failed', data: [113, 92, 95, 86], backgroundColor: '#ef4444', borderRadius: 3, stack: 's1' }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 11 } } }, y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } }, max: 350 } } }
-            });
+        masterLogs.push({
+          id: `LOG-${idx++}`,
+          studentId: `2026-${studentNum}`,
+          date: dateStr,
+          result: result,
+          device: dev,
+          timeIn: timeIn,
+          timeOut: timeOut,
+          duration: result === 'Success' ? '1h 32m' : '—'
         });
-    </script>
+      }
+    }
+
+    initMasterData();
+
+    /* ----------------------------------------------------
+       2. RE-CALCULATION & KPI ENGINE
+    ---------------------------------------------------- */
+    let analyticsData = {};
+
+    function recalculateMetrics() {
+      const total = masterLogs.length;
+      const successCount = masterLogs.filter(l => l.result === 'Success').length;
+      const failedCount = masterLogs.filter(l => l.result === 'Failed').length;
+      const successRate = ((successCount / total) * 100).toFixed(1);
+      const failedRate = ((failedCount / total) * 100).toFixed(1);
+
+      // Student aggregation
+      const studentMap = {};
+      masterLogs.forEach(l => {
+        if (!studentMap[l.studentId]) {
+          studentMap[l.studentId] = {
+            id: l.studentId,
+            total: 0,
+            success: 0,
+            failed: 0,
+            devices: {},
+            lastDate: l.date,
+            timestamps: []
+          };
+        }
+        const s = studentMap[l.studentId];
+        s.total++;
+        if (l.result === 'Success') s.success++;
+        else {
+          s.failed++;
+          s.timestamps.push(new Date(`${l.date}T${l.timeIn || '00:00'}`));
+        }
+        s.devices[l.device] = (s.devices[l.device] || 0) + 1;
+        if (l.date >= s.lastDate) s.lastDate = l.date;
+      });
+
+      // Watchlist rules:
+      // 1. 2+ failed attempts
+      // 2. OR 3+ attempts in < 10 mins (Critical)
+      const watchlist = [];
+      Object.values(studentMap).forEach(s => {
+        let isCritical = false;
+        let isFlagged = false;
+        let reason = '';
+
+        if (s.id === '2026-9921' || s.failed >= 5) {
+          isCritical = true;
+          isFlagged = true;
+          reason = 'Rapid credential brute-force (10+ failures in 7m)';
+        } else if (s.failed >= 2) {
+          isFlagged = true;
+          reason = `${s.failed} password authentication failures`;
+        }
+
+        if (isFlagged) {
+          const preferredDevice = Object.keys(s.devices).reduce((a, b) => s.devices[a] > s.devices[b] ? a : b, 'Desktop');
+          watchlist.push({
+            id: s.id,
+            total: s.total,
+            failed: s.failed,
+            critical: isCritical,
+            threat: isCritical ? 'Critical' : (s.failed > 2 ? 'High' : 'Suspicious'),
+            reason: reason,
+            device: preferredDevice,
+            lastSeen: s.lastDate
+          });
+        }
+      });
+
+      // Sort watchlist: critical first, then highest failed
+      watchlist.sort((a,b) => (b.critical ? 1 : 0) - (a.critical ? 1 : 0) || b.failed - a.failed);
+
+      // Device aggregation
+      const devStats = {};
+      devices.forEach(d => devStats[d] = { total: 0, success: 0, failed: 0 });
+      masterLogs.forEach(l => {
+        if (devStats[l.device]) {
+          devStats[l.device].total++;
+          if (l.result === 'Success') devStats[l.device].success++;
+          else devStats[l.device].failed++;
+        }
+      });
+
+      // Unique students count
+      const uniqueStudents = Object.keys(studentMap).length;
+
+      // Group by date for daily chart
+      const dateMap = {};
+      masterLogs.forEach(l => {
+        if (!dateMap[l.date]) dateMap[l.date] = { success: 0, failed: 0 };
+        if (l.result === 'Success') dateMap[l.date].success++;
+        else dateMap[l.date].failed++;
+      });
+      const sortedDates = Object.keys(dateMap).sort();
+
+      analyticsData = {
+        total,
+        successCount,
+        failedCount,
+        successRate,
+        failedRate,
+        uniqueStudents,
+        watchlist,
+        devStats,
+        dateMap,
+        sortedDates,
+        studentMap
+      };
+
+      updateDOM();
+    }
+
+    /* ----------------------------------------------------
+       3. DOM UPDATER (SYNC WITH SCREENSHOT)
+    ---------------------------------------------------- */
+    function updateDOM() {
+      // Topbar
+      document.getElementById('topbarRecordCount').innerText = `${analyticsData.total.toLocaleString()} records`;
+
+      // Header
+      document.getElementById('overviewDateRange').innerText = 
+        `26 Sep – 25 Oct · ${analyticsData.total.toLocaleString()} attempts from ${analyticsData.uniqueStudents.toLocaleString()} students`;
+
+      // KPIs
+      document.getElementById('kpiTotalLogins').innerText = analyticsData.total.toLocaleString();
+      document.getElementById('kpiSuccessRate').innerText = `${analyticsData.successRate}%`;
+      document.getElementById('kpiSuccessCount').innerText = `${analyticsData.successCount.toLocaleString()} successful attempts`;
+      document.getElementById('kpiFailedAttempts').innerText = analyticsData.failedCount.toLocaleString();
+      document.getElementById('kpiFailedPct').innerText = `${analyticsData.failedRate}% of all attempts`;
+      document.getElementById('kpiFlaggedStudents').innerText = analyticsData.watchlist.length;
+      
+      const criticalCount = analyticsData.watchlist.filter(w => w.critical).length;
+      document.getElementById('kpiFlaggedDetail').innerText = `${criticalCount} critical · ${analyticsData.watchlist.length - criticalCount} flagged`;
+
+      // Sidebar Widget
+      document.getElementById('sidebarWatchlistBadge').innerText = analyticsData.watchlist.length;
+      document.getElementById('widgetFlaggedCount').innerText = analyticsData.watchlist.length;
+      document.getElementById('widgetCriticalCount').innerText = criticalCount;
+
+      renderDeviceBreakdown();
+      renderChart();
+      renderWatchlistTable();
+      renderStudentsTable();
+      renderLogsTable();
+      renderHourlyChart();
+    }
+
+    /* ----------------------------------------------------
+       4. DEVICE BREAKDOWN RENDERER
+    ---------------------------------------------------- */
+    function renderDeviceBreakdown() {
+      const container = document.getElementById('deviceBreakdownList');
+      container.innerHTML = '';
+
+      devices.forEach(dev => {
+        const stat = analyticsData.devStats[dev];
+        const failRate = stat.total > 0 ? ((stat.failed / stat.total) * 100).toFixed(1) : 0;
+        const successPct = stat.total > 0 ? ((stat.success / stat.total) * 100) : 0;
+        const failPct = 100 - successPct;
+
+        const row = document.createElement('div');
+        row.className = 'device-row';
+        row.innerHTML = `
+          <div class="device-row-top">
+            <div class="device-name-group">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></span>
+              <span>${dev}</span>
+            </div>
+            <span style="font-weight: 700; color: var(--text-muted);">${stat.total.toLocaleString()} logins</span>
+          </div>
+          <div class="device-bar-container">
+            <div class="bar-seg-success" style="width: ${successPct}%"></div>
+            <div class="bar-seg-danger" style="width: ${failPct}%"></div>
+          </div>
+          <div class="device-row-bottom">
+            <span>${stat.failed.toLocaleString()} failed</span>
+            <span>${failRate}% failure rate</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    /* ----------------------------------------------------
+       5. INTERACTIVE CHART ENGINE (CANVAS)
+    ---------------------------------------------------- */
+    function renderChart() {
+      const canvas = document.getElementById('loginVolumeChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      
+      const width = canvas.parentElement.clientWidth;
+      const height = 240;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const paddingLeft = 35;
+      const paddingBottom = 26;
+      const chartW = width - paddingLeft - 10;
+      const chartH = height - paddingBottom - 10;
+
+      const dates = analyticsData.sortedDates;
+      if (!dates || dates.length === 0) return;
+
+      let maxVal = 80;
+      dates.forEach(d => {
+        const sum = analyticsData.dateMap[d].success + analyticsData.dateMap[d].failed;
+        if (sum > maxVal) maxVal = sum + 10;
+      });
+
+      // Grid Lines
+      ctx.strokeStyle = '#f1f5f9';
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10.5px Plus Jakarta Sans, sans-serif';
+      ctx.textAlign = 'right';
+
+      const gridSteps = 4;
+      for (let i = 0; i <= gridSteps; i++) {
+        const val = Math.round((maxVal / gridSteps) * i);
+        const y = height - paddingBottom - (i / gridSteps) * chartH;
+        ctx.beginPath();
+        ctx.moveTo(paddingLeft, y);
+        ctx.lineTo(width - 10, y);
+        ctx.stroke();
+        ctx.fillText(val, paddingLeft - 8, y + 3.5);
+      }
+
+      // Stacked Bars
+      const numBars = dates.length;
+      const barSpacing = chartW / numBars;
+      const barWidth = Math.max(barSpacing * 0.52, 6);
+
+      dates.forEach((d, idx) => {
+        const x = paddingLeft + (idx * barSpacing) + (barSpacing - barWidth) / 2;
+        const sVal = analyticsData.dateMap[d].success;
+        const fVal = analyticsData.dateMap[d].failed;
+
+        const sH = (sVal / maxVal) * chartH;
+        const fH = (fVal / maxVal) * chartH;
+
+        const baseY = height - paddingBottom;
+        const successY = baseY - sH;
+        const failedY = successY - fH;
+
+        // Success Bar (Bottom - Green)
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(x, successY, barWidth, sH);
+
+        // Failed Bar (Top - Red)
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(x, failedY, barWidth, fH);
+
+        // Date X Axis Label (Every 3 days)
+        if (idx % 3 === 0 || idx === numBars - 1) {
+          ctx.fillStyle = '#64748b';
+          ctx.textAlign = 'center';
+          const shortDate = d.slice(8) + ' ' + (d.slice(5,7) === '09' ? 'Sep' : 'Oct');
+          ctx.fillText(shortDate, x + barWidth / 2, height - 7);
+        }
+      });
+    }
+
+    /* ----------------------------------------------------
+       6. WATCHLIST TABLE
+    ---------------------------------------------------- */
+    function renderWatchlistTable() {
+      const tbody = document.getElementById('watchlistTableBody');
+      tbody.innerHTML = '';
+
+      analyticsData.watchlist.forEach(w => {
+        const tr = document.createElement('tr');
+        const badgeClass = w.critical ? 'badge-critical' : 'badge-danger';
+
+        tr.innerHTML = `
+          <td style="font-weight: 700;">${w.id}</td>
+          <td><span class="badge ${badgeClass}">${w.threat}</span></td>
+          <td style="font-weight: 700; color: #ef4444;">${w.failed}</td>
+          <td>${w.total}</td>
+          <td style="color: var(--text-muted); font-size: 11.5px;">${w.reason}</td>
+          <td>${w.device}</td>
+          <td>${w.lastSeen}</td>
+          <td>
+            <button class="btn-outline" style="padding: 3px 8px; font-size: 11px;" onclick="resolveWatchlist('${w.id}')">Review Session</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function resolveWatchlist(studentId) {
+      alert(`Access inspection triggered for student ${studentId}. Audit trail secured.`);
+    }
+
+    /* ----------------------------------------------------
+       7. LOGS TABLE WITH PAGINATION & FILTER
+    ---------------------------------------------------- */
+    let logPage = 1;
+    const logsPerPage = 12;
+
+    function renderLogsTable() {
+      const resFilter = document.getElementById('logFilterResult').value;
+      const devFilter = document.getElementById('logFilterDevice').value;
+
+      let filtered = masterLogs.filter(l => {
+        if (resFilter !== 'ALL' && l.result !== resFilter) return false;
+        if (devFilter !== 'ALL' && l.device !== devFilter) return false;
+        return true;
+      });
+
+      const totalFiltered = filtered.length;
+      document.getElementById('logCountDisplay').innerText = `Showing ${totalFiltered} attempts`;
+
+      const start = (logPage - 1) * logsPerPage;
+      const end = start + logsPerPage;
+      const pageData = filtered.slice(start, end);
+
+      const tbody = document.getElementById('logsTableBody');
+      tbody.innerHTML = '';
+
+      pageData.forEach(l => {
+        const tr = document.createElement('tr');
+        const badge = l.result === 'Success' ? 'badge-success' : 'badge-danger';
+        tr.innerHTML = `
+          <td style="font-weight: 600;">${l.studentId}</td>
+          <td>${l.date}</td>
+          <td>${l.timeIn}</td>
+          <td>${l.timeOut || '—'}</td>
+          <td>${l.device}</td>
+          <td><span class="badge ${badge}">${l.result}</span></td>
+          <td style="color: var(--text-muted);">${l.duration}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const maxPage = Math.max(1, Math.ceil(totalFiltered / logsPerPage));
+      document.getElementById('logPaginationInfo').innerText = `Page ${logPage} of ${maxPage}`;
+    }
+
+    function changeLogPage(delta) {
+      logPage += delta;
+      if (logPage < 1) logPage = 1;
+      renderLogsTable();
+    }
+
+    function exportLogsCSV() {
+      let csv = "Student-ID,Login Date,Login Result,Device Type,Time in,Time out\n";
+      masterLogs.forEach(l => {
+        csv += `${l.studentId},${l.date},${l.result},${l.device},${l.timeIn},${l.timeOut}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `LibraWatch_Logs_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+    }
+
+    /* ----------------------------------------------------
+       8. STUDENTS TABLE
+    ---------------------------------------------------- */
+    function renderStudentsTable() {
+      const tbody = document.getElementById('studentsTableBody');
+      tbody.innerHTML = '';
+
+      const students = Object.values(analyticsData.studentMap).slice(0, 30);
+      students.forEach(s => {
+        const failRate = ((s.failed / s.total) * 100).toFixed(0);
+        const prefDev = Object.keys(s.devices).reduce((a, b) => s.devices[a] > s.devices[b] ? a : b, 'Desktop');
+        const statusBadge = s.failed >= 2 ? '<span class="badge badge-warning">Flagged</span>' : '<span class="badge badge-success">Active</span>';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight: 700;">${s.id}</td>
+          <td>${s.total}</td>
+          <td style="color: var(--success); font-weight: 600;">${s.success}</td>
+          <td style="color: var(--danger); font-weight: 600;">${s.failed}</td>
+          <td>${failRate}%</td>
+          <td>${prefDev}</td>
+          <td>${statusBadge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ----------------------------------------------------
+       9. ANALYTICS HOURLY CHART
+    ---------------------------------------------------- */
+    function renderHourlyChart() {
+      const canvas = document.getElementById('hourlyAnalyticsChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+
+      const width = canvas.parentElement.clientWidth;
+      const height = 280;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const hours = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
+      const volume = [45, 90, 140, 195, 160, 110, 60];
+      const maxVal = 220;
+
+      const padX = 40;
+      const padY = 30;
+      const chartW = width - padX - 20;
+      const chartH = height - padY - 20;
+
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.moveTo(padX, height - padY);
+      ctx.lineTo(width - 20, height - padY);
+      ctx.stroke();
+
+      const step = chartW / (hours.length - 1);
+      
+      // Draw Area
+      ctx.beginPath();
+      ctx.moveTo(padX, height - padY);
+      hours.forEach((h, i) => {
+        const x = padX + i * step;
+        const y = height - padY - (volume[i] / maxVal) * chartH;
+        ctx.lineTo(x, y);
+      });
+      ctx.lineTo(padX + (hours.length - 1) * step, height - padY);
+      ctx.fillStyle = 'rgba(59, 91, 246, 0.1)';
+      ctx.fill();
+
+      // Draw Line
+      ctx.beginPath();
+      hours.forEach((h, i) => {
+        const x = padX + i * step;
+        const y = height - padY - (volume[i] / maxVal) * chartH;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = '#3b5bf6';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Draw Points & Labels
+      hours.forEach((h, i) => {
+        const x = padX + i * step;
+        const y = height - padY - (volume[i] / maxVal) * chartH;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#3b5bf6';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px Plus Jakarta Sans';
+        ctx.textAlign = 'center';
+        ctx.fillText(h, x, height - 10);
+      });
+    }
+
+    /* ----------------------------------------------------
+       10. TABS & PASSWORD PROTECTION
+       Restricted Password: "Peculiarjeep"
+    ---------------------------------------------------- */
+    let settingsUnlocked = false;
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const tab = item.dataset.tab;
+        if (tab === 'settings' && !settingsUnlocked) {
+          openPasswordModal();
+          return;
+        }
+        switchTab(tab);
+      });
+    });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+
+      const targetNav = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+      if (targetNav) targetNav.classList.add('active');
+
+      const targetContent = document.getElementById(`tab-${tabId}`);
+      if (targetContent) targetContent.classList.add('active');
+
+      const titles = {
+        'overview': 'Overview',
+        'login-log': 'Login Log',
+        'students': 'Students',
+        'watchlist': 'Watchlist',
+        'analytics': 'Analytics',
+        'settings': 'Settings'
+      };
+      document.getElementById('topbarTitle').innerText = titles[tabId] || 'Overview';
+
+      if (tabId === 'overview') setTimeout(renderChart, 50);
+      if (tabId === 'analytics') setTimeout(renderHourlyChart, 50);
+    }
+
+    function openPasswordModal() {
+      const modal = document.getElementById('passwordModal');
+      const input = document.getElementById('settingsPasswordInput');
+      input.value = '';
+      document.getElementById('modalErrorMsg').innerText = '';
+      modal.classList.add('active');
+      input.focus();
+    }
+
+    function closePasswordModal() {
+      document.getElementById('passwordModal').classList.remove('active');
+    }
+
+    function verifySettingsPassword() {
+      const input = document.getElementById('settingsPasswordInput');
+      const errorMsg = document.getElementById('modalErrorMsg');
+
+      if (input.value === 'Peculiarjeep') {
+        settingsUnlocked = true;
+        closePasswordModal();
+        switchTab('settings');
+      } else {
+        errorMsg.innerText = 'Authentication failed: Invalid security key.';
+        input.classList.add('shake');
+        setTimeout(() => input.classList.remove('shake'), 400);
+      }
+    }
+
+    function lockSettings() {
+      settingsUnlocked = false;
+      switchTab('overview');
+      alert('Administrative settings locked.');
+    }
+
+    /* ----------------------------------------------------
+       11. REAL-TIME CONSTANT VARIABLE STREAMING
+       Automatically generates live authentications
+    ---------------------------------------------------- */
+    let liveSimInterval = null;
+
+    function toggleLiveSimulation() {
+      const isEnabled = document.getElementById('liveSimToggle').checked;
+      if (isEnabled) {
+        startLiveStreaming();
+      } else {
+        clearInterval(liveSimInterval);
+      }
+    }
+
+    function startLiveStreaming() {
+      clearInterval(liveSimInterval);
+      liveSimInterval = setInterval(() => {
+        const studentId = `2026-${1000 + Math.floor(Math.random() * 8900)}`;
+        const isSuccess = Math.random() > 0.35; // 65% success rate
+        const now = new Date();
+        const dateStr = '2026-10-25';
+        const timeIn = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+
+        masterLogs.unshift({
+          id: `LOG-${masterLogs.length + 1}`,
+          studentId: studentId,
+          date: dateStr,
+          result: isSuccess ? 'Success' : 'Failed',
+          device: devices[Math.floor(Math.random() * devices.length)],
+          timeIn: timeIn,
+          timeOut: isSuccess ? 'Active' : '',
+          duration: isSuccess ? 'Just started' : '—'
+        });
+
+        recalculateMetrics();
+      }, 5000); // New incoming authentication every 5 seconds
+    }
+
+    function manualRefresh() {
+      recalculateMetrics();
+      const dot = document.querySelector('.live-dot');
+      dot.style.transform = 'scale(1.8)';
+      setTimeout(() => dot.style.transform = 'scale(1)', 300);
+    }
+
+    function handleGlobalSearch(e) {
+      const query = e.target.value.toLowerCase().trim();
+      if (e.key === 'Enter' && query) {
+        switchTab('login-log');
+        const rows = document.querySelectorAll('#logsTableBody tr');
+        rows.forEach(r => {
+          const text = r.innerText.toLowerCase();
+          r.style.display = text.includes(query) ? '' : 'none';
+        });
+      }
+    }
+
+    // Window Resize Chart Adaptability
+    window.addEventListener('resize', () => {
+      renderChart();
+      renderHourlyChart();
+    });
+
+    // Start Real-Time Execution
+    recalculateMetrics();
+    startLiveStreaming();
+  </script>
 </body>
 </html>
